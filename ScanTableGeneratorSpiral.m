@@ -31,12 +31,10 @@ aScanPositionsYmm = sqrt(Vcv*deltaR*t/pi).*sin(sqrt(Vcv*4*pi*t/deltaR)) * 1000;
 aScanPositionsXmm(1:removeInnerNPoints) = [];
 aScanPositionsYmm(1:removeInnerNPoints) = [];
 nAscans = nAscans-removeInnerNPoints;
-
  
 % %%flip spiral (scanners start from the outside)
 % aScanPositionsXmm = flip (aScanPositionsXmm);
 % aScanPositionsYmm = flip (aScanPositionsYmm);
-
 
 %% calculate flyback
 dT = nFlybackPoints+1;
@@ -158,8 +156,6 @@ nAscans = 1000;
 
 T = delaunayn(scanTable(1:nAscans,5:6));
 k = dsearchn(scanTable(1:nAscans,5:6), T, squareGrid,Inf);  
-
-
 
 
 for ii = 1:nAscans
