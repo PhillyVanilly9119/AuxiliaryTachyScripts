@@ -1,25 +1,35 @@
-% clear
-% clc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   
+%   Params: 400kHz, Spectral Splitting = 1, 100 points in the middle removed
+% 
+%   Authors comment: No Distortion of objects under OCT
+% 
+%   Authors: @A.Britten anja.britten@meduniwien.ac.at
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %% ScanTableGenerator for spiral scans
 %% input parameters
-outputFolder = 'D:\1 4D OCT\Scanpattern\patternUpdate_08_26_2020\scannerfeedbackTest\1MHzcalib\';
+outputFolder = 'D:\1 4D OCT\Scanpattern\patternUpdate_08_26_2020\scannerfeedbackTest\007\';
 % outputFolder = 'C:\Users\Philipp\Desktop\';
 
 zoom = 1;
 spotsize = 23E-6;  % @ 1/e^2 in m
-sweepRate = 1000000; % in Hz
-spectralSplittingFactor = 1;
+sweepRate = 400000; % in Hz
+spectralSplittingFactor = 2;
 volRate = 16; %in vol/s
-nFlybackPoints = 450;
+nFlybackPoints = 500;
 removeInnerNPoints = 1000;
-patternnumber = '2000_19_11_v1';
+%%470
+patternnumber = '007_400_v11';
 
 %% pre-calculations
 ascanRate = sweepRate * spectralSplittingFactor;
 nAscans = floor(ascanRate/volRate); % N scans per volume
-nAscans = nAscans-nFlybackPoints; % N scans per volume flyback points subtracted
+nAscans = nAscans-nFlybackPoints*spectralSplittingFactor; % N scans per volume flyback points subtracted
 dutyCycle = nAscans / (nAscans + nFlybackPoints) *100; 
 deltaR = 0.5*spotsize; %distance between two spots in m
+nFlybackPoints = nFlybackPoints*spectralSplittingFactor;
 
 %% calculate A-scan positions
 t = linspace(0,1,nAscans)';
@@ -31,10 +41,12 @@ aScanPositionsYmm = sqrt(Vcv*deltaR*t/pi).*sin(sqrt(Vcv*4*pi*t/deltaR)) * 1000;
 aScanPositionsXmm(1:removeInnerNPoints) = [];
 aScanPositionsYmm(1:removeInnerNPoints) = [];
 nAscans = nAscans-removeInnerNPoints;
+
  
 % %%flip spiral (scanners start from the outside)
 % aScanPositionsXmm = flip (aScanPositionsXmm);
 % aScanPositionsYmm = flip (aScanPositionsYmm);
+
 
 %% calculate flyback
 dT = nFlybackPoints+1;
@@ -139,9 +151,10 @@ end
 %% calculate field of view & size of rectangular grid
 maxRadiusMM = max([max(abs(aScanPositionsXmm)) max(abs(aScanPositionsYmm))]);
 fovMM = maxRadiusMM * 2;
-
 rectGridSize = ceil(fovMM / (deltaR*1000));
 
+innerRadMM = sqrt(scanPatternMM(1,1)^2 + scanPatternMM(1,2)^2); %radius in mm of inner gap
+rectGridSizeInner = ceil(innerRadMM / (deltaR*1000)); %size of inner gap at rectGrid
 %% calculate original A-scan positions on rect grid
 aScanPositionsXrectGridInd = (aScanPositionsXmm + maxRadiusMM) / fovMM * (rectGridSize-1) +1;
 aScanPositionsYrectGridInd = (aScanPositionsYmm + maxRadiusMM) / fovMM * (rectGridSize-1) +1;
@@ -150,22 +163,59 @@ scanTable(1:nAscans,5) = aScanPositionsXrectGridInd;
 scanTable(1:nAscans,6) = aScanPositionsYrectGridInd;
 
 
-nAscans = 1000;
+% nAscans = 1000;
 %% find destinations on rect grid for each A-scan
 [squareGrid(:,1), squareGrid(:,2)] = ind2sub([rectGridSize rectGridSize], 1:rectGridSize^2);
 
-T = delaunayn(scanTable(1:nAscans,5:6));
-k = dsearchn(scanTable(1:nAscans,5:6), T, squareGrid,Inf);  
+% T = delaunayn(scanTable(1:nAscans,5:6));
+% k = dsearchn(scanTable(1:nAscans,5:6), T, squareGrid,Inf);  
+% 
+% 
+% 
+% 
+% for ii = 1:nAscans
+%     destinations = find(k==ii);
+%     if ~isempty(destinations)
+%         for jj = 1:length(destinations)
+%             [scanTable(ii,6+jj*2-1), scanTable(ii,6+jj*2)] = ind2sub([rectGridSize rectGridSize], destinations(jj));
+%         end
+%     end
+% end
 
+%% newremap
+mindist (1:nAscans,1) =rectGridSize;
+mindist_ind (1:nAscans,1) =rectGridSize;
 
-for ii = 1:nAscans
-    destinations = find(k==ii);
-    if ~isempty(destinations)
-        for jj = 1:length(destinations)
-            [scanTable(ii,6+jj*2-1), scanTable(ii,6+jj*2)] = ind2sub([rectGridSize rectGridSize], destinations(jj));
+for i = 1:nAscans
+
+    for j=1:size(squareGrid,1)
+    dist = sqrt((scanTable(i,5)-squareGrid(j,1))^2+(scanTable(i,6)-squareGrid(j,2))^2);
+        if dist < mindist(i,1) 
+            mindist(i,:) = dist;
+            mindist_ind(i,:) = j;
+        
         end
     end
 end
+    
+rectGrid = zeros(rectGridSize,rectGridSize);
+    
+%% reorganize
+
+
+for i = 1:nAscans
+    scanTable_remap(i,1:2) = squareGrid(mindist_ind(i),:);
+%     rectGrid((squareGrid(mindist_ind(i),1)),(squareGrid(mindist_ind(i),2))) = 1;
+end
+scanTable_remap(nAscans+1:nAscans+nFlybackPoints,1:2) = 0;
+scanTable_remap(:,3:4) = 0;
+
+scanTable (:,7:10) = scanTable_remap;
+% 
+% figure;
+% imagesc(rectGrid)
+
+
 
 %% plots
 figure(1)
@@ -187,6 +237,8 @@ ylim([round(rectGridSize/2)-5 round(rectGridSize/2)+5])
 
 %%
 %check remap file 
+
+scanTable(nAscans+1:end,:) =0;
 figure;
 plot(scanTable(1:nAscans,7),scanTable(1:nAscans,8),'.')
 hold on
@@ -204,7 +256,7 @@ plot(scanTable(1:nAscans,9),scanTable(1:nAscans,10),'.')
 
 
 
-
+%%
 filename = strcat(outputFolder,num2str(patternnumber), '_Spiral_', num2str(spectralSplittingFactor), 'x_', num2str(sweepRate/1000),'kHz_', num2str(volRate),"vol_",num2str(fovMM),"mm_",num2str(nAscans),'AScans_',num2str(nFlybackPoints),'flybackpoints','.bin');
 fid = fopen(filename,'w');
 
@@ -214,8 +266,8 @@ fwrite(fid, single(scanTable(:,1:10)), 'single');
 fclose(fid);
 
 %% save scanTable as .bin file for Philipp
-% filename = strcat(outputFolder, num2str(patternnumber),'_Spiral.bin');
-filename = strcat(outputFolder,'donuttest.bin');
+% % filename = strcat(outputFolder, num2str(patternnumber),'_Spiral.bin');
+filename = strcat(outputFolder,'007_400_v11.bin');
 fid = fopen(filename,'w');
 
 fwrite(fid, scanTable(:,7:10), 'uint32');
