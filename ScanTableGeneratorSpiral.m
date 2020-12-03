@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   
-%   Params: 400kHz, Spectral Splitting = 1, 100 points in the middle removed
+%   Params: 400kHz, Spectral Splitting = 1, 1000 points in the middle removed
 % 
 %   Authors comment: No Distortion of objects under OCT
 % 
