@@ -62,7 +62,7 @@ plot(Yvel)
 %%
 %save pos vect 1 spiral
 Xsave=[Xges,Yges];
-filename = 'D:\1 4D OCT\Scanpattern\patternUpdate_08_26_2020\scannerfeedbackTest\gem1006\XYpos.bin'
+filename = 'D:\1 4D OCT\Scanpattern\patternUpdate_08_26_2020\scannerfeedbackTest\gem1006\XYpos.bin';
 fid = fopen (filename,'w');
 
 fwrite(fid, Xsave, 'single');

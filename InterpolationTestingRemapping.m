@@ -16,18 +16,21 @@ size_data = size(data);
 data = reshape(data, [(size_data(1)/2), 2]);
 
 %% Philipps Remapping Logic
+
 oldLinSpace = 1:size(data);
 newLinSpace = linspace(1, 6150, 61500);
 xInt = interp1(oldLinSpace, data(:,1), newLinSpace, 'PCHIP');
 % Plotting 
-figure; plot(data(:,1)); 
-hold on; plot(xInt);
+figure; plot(xInt); hold on;
 
 %% Anjas Remapping Logic
+
 x = linspace(1, 6150, 61500);
 y = linspace(1, 2, 2);
 [X,Y] = meshgrid(x, y);
+XYges = [X,Y];
 res = interp2(transpose(XYges), X, Y);
 res = transpose(res);
-figure; 
-plot(res)
+% Plotting 
+plot(res(:,1));
+
