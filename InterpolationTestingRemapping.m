@@ -7,7 +7,7 @@
 
 %% Loading feedback data from *.bin-file
 
-filename = 'C:\Users\ZeissLab\Desktop\RemappingFiles\XYpos_2000_19_11_v1.bin';
+filename = 'C:\Users\Philipp\Desktop\XYpos_2000_19_11_v1.bin';
 
 fid = fopen(filename, 'rb');
 data = fread(fid, 'single');
@@ -18,7 +18,7 @@ data = reshape(data, [(size_data(1)/2), 2]);
 %% Philipps Remapping Logic
 oldLinSpace = 1:size(data);
 newLinSpace = linspace(1, 6150, 61500);
-xInt = interp1(oldLinSpace, data(:,1), newLinSpace, 'PCHIP');
+xInt = interp1(oldLinSpace, data(:,1), newLinSpace, 'cubic');
 % Plotting 
 figure; plot(data(:,1)); 
 hold on; plot(xInt);
