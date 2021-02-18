@@ -162,6 +162,7 @@ aScanPositionsYrectGridInd = (aScanPositionsYmm + maxRadiusMM) / fovMM * (rectGr
 scanTable(1:nAscans,5) = aScanPositionsXrectGridInd;
 scanTable(1:nAscans,6) = aScanPositionsYrectGridInd;
 
+<<<<<<< Updated upstream
 
 % nAscans = 1000;
 %% find destinations on rect grid for each A-scan
@@ -194,6 +195,21 @@ for i = 1:nAscans
             mindist(i,:) = dist;
             mindist_ind(i,:) = j;
         
+=======
+nAscans = 1000;
+%% find destinations on rect grid for each A-scan
+[squareGrid(:,1), squareGrid(:,2)] = ind2sub([rectGridSize rectGridSize], 1:rectGridSize^2);
+
+T = delaunayn(scanTable(1:nAscans,5:6));
+k = dsearchn(scanTable(1:nAscans,5:6), T, squareGrid, Inf);  
+
+for ii = 1:nAscans
+    %Problem
+    destinations = find(k==ii);
+    if ~isempty(destinations)
+        for jj = 1:length(destinations)
+            [scanTable(ii,6+jj*2-1), scanTable(ii,6+jj*2)] = ind2sub([rectGridSize rectGridSize], destinations(jj));
+>>>>>>> Stashed changes
         end
     end
 end
@@ -252,15 +268,16 @@ plot(scanTable(1:nAscans,9),scanTable(1:nAscans,10),'.')
 % readbin.vi needs to be adjusted
 %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+<<<<<<< Updated upstream
 
 
 
 
 %%
+=======
+>>>>>>> Stashed changes
 filename = strcat(outputFolder,num2str(patternnumber), '_Spiral_', num2str(spectralSplittingFactor), 'x_', num2str(sweepRate/1000),'kHz_', num2str(volRate),"vol_",num2str(fovMM),"mm_",num2str(nAscans),'AScans_',num2str(nFlybackPoints),'flybackpoints','.bin');
 fid = fopen(filename,'w');
-
-
 
 fwrite(fid, single(scanTable(:,1:10)), 'single');
 fclose(fid);
